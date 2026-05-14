@@ -104,28 +104,83 @@ PE(:,1:M)    = C(:,1:M)./n;
 
 %%%%% Partial Correlation Estimation: Vieira-Morf Method [2] with unbiased covariance estimation
 %===== In [1] this algorithm is denoted "Nutall-Strand with unbiased covariance" =====%
+%(06/01/2025) JS, adding plotting visualization for Coefficients.
+% fig1 = figure;
+% p1 = plot(ARF','Color','blue','LineStyle','-');
+% xlabel('Sample');
+% ylabel('mV');
+% title(sprintf('(M=%i) ARF',morder));
+% set(fig1,'Position',[900,50,620,360]);
+% % 
+% fig3 = figure;
+% p3 = plot(ARB','Color','blue','LineStyle','-');
+% xlabel('Sample');
+% ylabel('mV');
+% title(sprintf('(M=%i) ARB',morder));
+% set(fig3,'Position',[100,50,620,360]);
+
 
 F = data;
 B = data;
 
 PEF = PE(:,1:M);
 PEB = PE(:,1:M);
-for K = 1:morder,
+
+% %--
+% pPEB = zeros(size(data));
+% pPEF = zeros(size(data));
+% pPEB(:,:) = data;
+% pPEF(:,:) = data;
+% fig4 = figure;
+% % h1 = heatmap(PEF);
+% p4 = plot(pPEF);
+% xlabel('to');
+% ylabel('from');
+% title('PEF');
+% set(fig4,'Position',[100,550,620,360]);
+% % h1c = [-0.5,0.5];
+% 
+% fig5 = figure;
+% % h2 = heatmap(PEB);
+% p5 = plot(pPEB);
+% xlabel('to');
+% ylabel('from');
+% title('PEB');
+% set(fig5,'Position',[900,550,620,360]);
+% % h2.ColorLimits = h1c;
+
+drawnow;
+
+for K = 1:morder
         [D,n]	= covm(F(K+1:N,:),B(1:N-K,:),'M');
         D       = D./n;
 
-
         ARF(:,K*M+(1-M:0)) = D / PEB;	
         ARB(:,K*M+(1-M:0)) = D'/ PEF;	
-
+        % %-- update plot
+        % pPEF(K+1:N,:) = F(K+1:N,:);
+        % pPEB(1:N-K,:) = B(1:N-K,:);  
+        % for pi = 1:length(p1)
+        %     p1(pi).YData = ARF(pi,:);
+        %     p3(pi).YData = ARB(pi,:);
+        % end
+        % drawnow;
+            
         tmp        = F(K+1:N,:) - B(1:N-K,:)*ARF(:,K*M+(1-M:0)).';
         B(1:N-K,:) = B(1:N-K,:) - F(K+1:N,:)*ARB(:,K*M+(1-M:0)).';
         F(K+1:N,:) = tmp;
+        
 
-        for L = 1:K-1,
+        for L = 1:K-1
                 tmp                    = ARF(:,L*M+(1-M:0)) - ARF(:,K*M+(1-M:0))*ARB(:,(K-L)*M+(1-M:0));
                 ARB(:,(K-L)*M+(1-M:0)) = ARB(:,(K-L)*M+(1-M:0)) - ARB(:,K*M+(1-M:0))*ARF(:,L*M+(1-M:0));
                 ARF(:,L*M+(1-M:0))     = tmp;
+                %-- update plot
+                % for pi = 1:length(p1)
+                %     p1(pi).YData = ARF(pi,:);
+                %     p3(pi).YData = ARB(pi,:);
+                % end
+                % drawnow;
         end
 
         RCF(:,K*M+(1-M:0)) = ARF(:,K*M+(1-M:0));
@@ -137,8 +192,26 @@ for K = 1:morder,
         [PEB,n] = covm(B(1:N-K,:),B(1:N-K,:),'M');
         PEB     = PEB./n;
 
-        PE(:,K*M+(1:M)) = PEF;        
+        PE(:,K*M+(1:M)) = PEF;
+        %-- update plot
+        % pPEF(:,K*M+(1:M)) = PEF;
+        % pPEB(:,K*M+(1:M)) = PEB;
+        % for pi = 1:M
+        %     p4(pi).YData = pPEF(:,pi);
+        %     p5(pi).YData = pPEB(:,pi);
+        %     % p4(pi).YData = pPEF(pi,:);
+        %     % p5(pi).YData = pPEB(pi,:);
+        % end
+        % drawnow;
+        %--
+        % h1.ColorData = PEF;
+        % h2.ColorData = PEB;
+        % h1.ColorLimits = h1c;
+        % h2.ColorLimits = h1c;
+        % drawnow;
+        % pause(0.5);
 end
+% close(fig1,fig3,fig4,fig5);
 
 if any(ARF(:)==inf),
     % Test for matrix division bug. 

@@ -255,7 +255,7 @@ classdef PropertyGridField < hgsetget
                     env_handleerror(lasterror);
                     disp('The given argument specification (shown below) could not be converted into a GUI-supported PropertyGridField. You are now in debug mode.');
                     t = PropertyType(gui_type,s.shape,s.range); x = s.value;
-                    s
+                    
                     keyboard
                 end
                 if ~isempty(s.children)
